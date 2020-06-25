@@ -54,15 +54,16 @@ public class HandleResult {
     private void handleEntityObj(Object object, ResultSet rs) throws Exception {
         Class cla = object.getClass();
         ResultSetMetaData metaData = rs.getMetaData();
+        String columnName = null;
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
-            String columnName = metaData.getColumnName(i);
+            columnName = metaData.getColumnName(i);
             try {
                 Field field = cla.getDeclaredField(columnName);
                 String methodName = "set" + columnName.substring(0, 1).toUpperCase() + columnName.substring(1);
                 Method method = cla.getDeclaredMethod(methodName, field.getType());
                 method.invoke(object, rs.getObject(columnName));
             } catch (NoSuchFieldException e) {
-
+                continue;
             }
         }
     }
@@ -76,8 +77,9 @@ public class HandleResult {
     private void handleMap(Object object, ResultSet rs) throws SQLException {
         Map map = (Map) object;
         ResultSetMetaData metaData = rs.getMetaData();
+        String columnName = null;
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
-            String columnName = metaData.getColumnName(i);
+            columnName = metaData.getColumnName(i);
             Object obj = rs.getObject(columnName);
             map.put(columnName, obj);
         }
@@ -126,10 +128,9 @@ public class HandleResult {
      * @param sql 按照规则写的sql
      * @return 处理的封装  处理的sql  和解析出来的参数name id
      */
-     HandleSqlHelper handleSql(String sql) {
+    HandleSqlHelper handleSql(String sql) {
         StringBuilder sb = new StringBuilder();
         List<String> dataList = new ArrayList<String>();
-        HandleSqlHelper handleSqlHelper = null;
         int left = sql.indexOf("#{");
         int right = sql.indexOf("}");
         if (left != -1 && right != -1 && right > left) {
@@ -143,8 +144,9 @@ public class HandleResult {
             }
         }
         sb.append(sql);
-        handleSqlHelper = new HandleSqlHelper(sb.toString(), dataList);
-        return handleSqlHelper;
+
+        return new HandleSqlHelper(sb.toString(), dataList);
+
     }
 
     private boolean handleType(Class cla) {

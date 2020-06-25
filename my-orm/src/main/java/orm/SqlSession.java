@@ -12,6 +12,7 @@ import java.lang.reflect.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SqlSession {
     private HandleResult result = MySpring.getBean("orm.HandleResult");
@@ -130,13 +131,13 @@ public class SqlSession {
         return select(sql, obj, cla).size() == 0 ? null : (T) select(sql, obj, cla).get(0);
     }
 
-    public <T> T getMapping(Class<test.Test1> cla) {
+    public <T> T getMapping(Class cla) {
         return (T) Proxy.newProxyInstance(cla.getClassLoader(), new Class[]{cla}, new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args) {
                 //获取方法上面的注解
                 Annotation methodAnnotation = method.getAnnotations()[0];
                 //获取注解的类型
-                Class cla =  methodAnnotation.annotationType();
+                Class cla = methodAnnotation.annotationType();
                 String sql = null;
                 //获取参数
                 Object arg = args == null ? null : (args.length == 0 ? null : args[0]);
@@ -159,8 +160,15 @@ public class SqlSession {
                     Class returnType = method.getReturnType();
                     if (returnType == List.class) {
                         //获取泛型的类型
-                        ParameterizedType parameterizedType = (ParameterizedType) method.getGenericReturnType();
-                        Class clazz = (Class) parameterizedType.getActualTypeArguments()[0];
+                        ParameterizedType parameterizedType = null;
+                        Class clazz = null;
+                        try {
+                            parameterizedType = (ParameterizedType) method.getGenericReturnType();
+                            clazz = (Class) parameterizedType.getActualTypeArguments()[0];
+                        } catch (Exception e) {
+                            clazz = Map.class;
+                        }
+
                         return SqlSession.this.select(sql, arg, clazz);
                     } else {
                         return SqlSession.this.selectOne(sql, arg, returnType);
