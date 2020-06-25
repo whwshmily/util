@@ -3,6 +3,7 @@ package root;
 import annotation.RequestMapping;
 import annotation.RequestParam;
 import com.google.gson.Gson;
+import com.sun.xml.internal.ws.util.StringUtils;
 import exception.NoSuchRedirect;
 import exception.ParamTypeException;
 import exception.RequestMappingException;
@@ -347,6 +348,11 @@ public class DispatcherServlet extends HttpServlet {
         //获取请求名字
         String uri = request.getRequestURI();
         //根据配置文件或注解扫描 找到对应请求的类和方法
+        String contentPath = request.getContextPath();
+        if (!(contentPath == null || contentPath == "")){
+            int length = contentPath.length();
+            uri = uri.substring(length);
+        }
         Object object = classMap.get(uri);
         Method method = methodMap.get(uri);
         //对方法进行处理  处理并获取方法的参数  对参数进行自动注入
@@ -362,6 +368,7 @@ public class DispatcherServlet extends HttpServlet {
         }
         //根据返回值 做出不同的判断 是转发 重定向 json
         handleResultAndResponse(result, request, response);
+
     }
 
 
